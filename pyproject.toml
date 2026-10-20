@@ -27,3 +27,6 @@ fd-zhesi-reference = "fd_zhesi_reference.cli:cli"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.setuptools]
+packages = ["fd_zhesi_reference"]
