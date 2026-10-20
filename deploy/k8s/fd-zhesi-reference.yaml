@@ -1,0 +1,62 @@
+# fd-zhesi-reference — prod (fd-prod)
+# 识律法律检索 MCP（lex-platform-v1；FastMCP streamable-http /mcp on :8000）。
+# env ← Secret fd-zhesi-reference-env（键名表见 deploy/README.md；清单不含明文）。
+# 资源档：requests 保持轻（fd-prod 余量小），但 limits 必须给足——256Mi 的旧值
+# 导致 13 天 12 次 OOMKilled（exit 137，实测 2026-10-19），判卷文书正文时进程
+# 峰值远超该值。1Gi 是「单篇正文 + 解压块 + 连接池」的安全边际；正文返回体积
+# 已在工具侧收紧（默认 12k 字符），此处是第二道保护而非唯一防线。
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fd-zhesi-reference
+  namespace: fd-prod
+  labels:
+    app.kubernetes.io/name: fd-zhesi-reference
+    app.kubernetes.io/part-of: finddata
+    app.kubernetes.io/environment: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fd-zhesi-reference
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: fd-zhesi-reference
+        app.kubernetes.io/part-of: finddata
+        app.kubernetes.io/environment: production
+    spec:
+      containers:
+        - name: mcp
+          image: ccr.ccs.tencentyun.com/finddata-business/fd-zhesi-reference:sha-eb71d36
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          readinessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 3
+          envFrom:
+            - secretRef:
+                name: fd-zhesi-reference-env
+          resources:
+            requests: { cpu: 20m, memory: 96Mi }
+            limits: { cpu: 500m, memory: 1Gi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fd-zhesi-reference
+  namespace: fd-prod
+  labels:
+    app.kubernetes.io/name: fd-zhesi-reference
+    app.kubernetes.io/part-of: finddata
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: fd-zhesi-reference
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      nodePort: 31884
