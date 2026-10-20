@@ -15,6 +15,7 @@ dependencies = [
     "click",
     "uvicorn",
     "httpx",
+    "sparqlwrapper>=2.0",
 ]
 
 [project.optional-dependencies]

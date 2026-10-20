@@ -26,12 +26,25 @@ async def source_status() -> dict:
             "SELECT source, status, detail, as_of FROM ingest_log "
             "WHERE as_of = (SELECT MAX(as_of) FROM ingest_log l2 WHERE l2.source = ingest_log.source)"
         ).fetchall()
+        sep_cached = conn.execute("SELECT COUNT(*) AS c FROM concepts").fetchone()["c"]
     finally:
         conn.close()
 
     by_source = {r["source"]: r for r in rows}
     results = []
     for source, expectation in SOURCES.items():
+        if source == "sep":
+            # SEP 是按需缓存层（无批量摄取）：状态由 concepts 缓存行数决定
+            results.append(
+                {
+                    "source": source,
+                    "status": "ok" if sep_cached else "not_ingested",
+                    "detail": f"on-demand 缓存 {sep_cached} 条" if sep_cached else None,
+                    "reason": None if sep_cached else "not_ingested",
+                    "expectation": expectation,
+                }
+            )
+            continue
         row = by_source.get(source)
         if row is None:
             results.append(
