@@ -59,8 +59,22 @@ def _person(row: sqlite3.Row) -> dict:
         "axes": {axis: row[axis] for axis in AXES},
         "influence_score": row["influence_score"],
         "wikidata_qid": row["wikidata_qid"],
-        "provenance": provenance(SOURCE, f"atlas:{row['atlas_id']}", row["ingested_at"]),
+        "provenance": provenance(
+            SOURCE,
+            f"atlas:{row['atlas_id']}",
+            row["ingested_at"],
+            _col(row, "snapshot_version"),
+        ),
     }
+
+
+def _col(row: sqlite3.Row, name: str):
+    """取可选列（旧库/旧行没有该列或为 NULL 时返回 None，不抛 KeyError）。"""
+    try:
+        return row[name]
+    except (IndexError, KeyError):
+        return None
+
 
 
 def _match_people(conn: sqlite3.Connection, name: str) -> list[sqlite3.Row]:
@@ -157,6 +171,7 @@ def query_relation(settings: Settings, source: str, target: str) -> dict:
                                     SOURCE,
                                     f"atlas:{origin['atlas_id']}->{dest['atlas_id']}",
                                     edge["ingested_at"],
+                                    _col(edge, "snapshot_version"),
                                 ),
                             }
                         )

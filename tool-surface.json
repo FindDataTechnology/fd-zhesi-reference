@@ -4,14 +4,15 @@
   "entry_path": "/fd-zhesi-reference",
   "product_line": "lex",
   "hosting": ["shared-instance"],
-  "description": "哲思（zhesi 线）参照系 MCP：哲学概念（SEP 引用层）、人物与六轴坐标、关系边（含极性）、立场分布。四层外部真源对接组装（不自建抽取），逐结果溯源（Atlas CC BY 4.0 署名随行），可私有化部署。",
+  "description": "哲思（zhesi 线）参照系 MCP：哲学概念（SEP 引用层）、人物与六轴坐标、关系边（含极性）、立场分布（PhilPapers Survey）、PhilPapers 论文元数据（经 OpenAlex 源 S4306402130，CC0）。四层外部真源对接组装（不自建抽取），逐结果溯源（Atlas CC BY 4.0 署名随行，带 snapshot_version），可私有化部署。",
   "tools": [
     {"name": "concept_lookup", "tracking_task": "2.4"},
     {"name": "philosopher_query", "tracking_task": "2.2"},
     {"name": "relation_query", "tracking_task": "2.2"},
     {"name": "stance_distribution", "tracking_task": "2.5"},
+    {"name": "philpapers_paper_search", "tracking_task": "zhesi-atlas-resilience 3.1"},
     {"name": "source_status", "tracking_task": "2.6"}
   ],
   "skills_eligible_for_packs": [],
-  "notes": "骨架期全部工具以诚实错误回报未接线状态（HonestError 含 tracking task），不编造数据。"
+  "notes": "空结果必带 reason（not_indexed / not_ingested / unknown_entity / blocked / upstream / unreachable / quota），不编造数据。静态源摄取走双门（许可门 + 可得性门），未过门时该层不摄取且缺口在 source_status 可见。许可红线（InPhO / DBpedia / Kialo / PhilPapers 直连）由 license.assert_allowed_url 守卫。"
 }

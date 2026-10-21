@@ -12,6 +12,7 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "scripts"))
 
 from fd_zhesi_reference.config import Settings  # noqa: E402
+from fd_zhesi_reference import tools_survey  # noqa: E402
 from fd_zhesi_reference.tools_survey import stance_distribution  # noqa: E402
 from ingest_survey import ingest  # noqa: E402
 
@@ -49,11 +50,15 @@ async def test_free_will_both_rounds(survey_db) -> None:
 @pytest.mark.asyncio
 async def test_not_indexed(survey_db) -> None:
     out = await stance_distribution("量子引力的道德含义")
-    assert out == {"results": [], "reason": "not_indexed"}
+    assert out["results"] == [] and out["reason"] == "not_indexed"
+    assert out["hint"]
 
 
 @pytest.mark.asyncio
 async def test_not_ingested(tmp_path, monkeypatch) -> None:
+    """Survey 缺失 → 空结果 + reason，且明确声明不以论文元数据兜底（3.2）。"""
     monkeypatch.setenv("FD_ZHESI_REF_DB", str(tmp_path / "empty.db"))
     out = await stance_distribution("free will")
-    assert out == {"results": [], "reason": "not_ingested"}
+    assert out["results"] == [] and out["reason"] == "not_ingested"
+    assert "兜底" in out["hint"]  # 分路口径写在返回里，不靠口头约定
+    assert tools_survey.PAPER_METADATA_FALLBACK is False

@@ -22,7 +22,7 @@ def test_server_name() -> None:
 
 @pytest.mark.asyncio
 async def test_honest_errors_on_all_tools() -> None:
-    """骨架期全部工具必须诚实报错：指名 tracking task，不返回数据。"""
+    """工具面完整性：五个源工具 + 论文元数据通道（zhesi-atlas-resilience 3.1）。"""
     mcp = create_server(Settings(db_path=":memory:"))
     tools = await mcp.list_tools()
     assert {t.name for t in tools} == {
@@ -30,6 +30,7 @@ async def test_honest_errors_on_all_tools() -> None:
         "philosopher_query",
         "relation_query",
         "stance_distribution",
+        "philpapers_paper_search",
         "source_status",
     }
     # 骨架→接线过渡期：未接线工具必须诚实报错（指名 tracking task），
@@ -42,7 +43,7 @@ async def test_source_status_empty_db(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("FD_ZHESI_REF_DB", str(tmp_path / "ref.db"))
     from fd_zhesi_reference.tools_registry import source_status
 
-    out = await source_status()
+    out = source_status()
     assert {r["source"] for r in out["results"]} == {
         "philosophy-atlas",
         "wikidata",
@@ -50,6 +51,8 @@ async def test_source_status_empty_db(tmp_path, monkeypatch) -> None:
         "philpapers-survey",
     }
     assert all(r["status"] == "not_ingested" and r["reason"] for r in out["results"])
+    # on-demand 通道单列（无批量摄取，不参与「未摄取」判定）
+    assert {r["source"] for r in out["on_demand"]} == {"philpapers-openalex"}
 
 
 @pytest.mark.asyncio
