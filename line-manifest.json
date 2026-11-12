@@ -6,9 +6,18 @@
     "issuer": "https://auth.finddatatech.cloud/oidc",
     "jwks_uri": "https://auth.finddatatech.cloud/oidc/jwks",
     "jit_policy": "off",
-    "note": "本仓零入站凭据校验：`FastMCP(SERVER_NAME, ...)` 未传 auth、未挂中间件（server.py:28-34）。HTTP 面是 `/mcp` + 无门 `/healthz` + 只读 REST `/api/v1/*`（zhengxin server.py:77-98；zhesi 同构）。无断言兑换端点，jit_policy=off。"
+    "note": "生产态今天仍是零入站凭据校验（部署未注入任何 token）。但**代码里已备好共享 bearer 门**：`fd_zhesi_reference/auth.py` 的 `BearerAuthMiddleware`（恒时比较、`MCP_BEARER_TOKEN` 每请求重读、lifespan 放行、`/health` 与 `/healthz` 精确豁免），未设变量时走原路径（serve() 传 middleware 给 http_app（cli.py:23-40），与接入前逐字节一致）。原料：本仓零入站凭据校验：`FastMCP(SERVER_NAME, ...)` 未传 auth、未挂中间件（server.py:28-34）。HTTP 面是 `/mcp` + 无门 `/healthz` + 只读 REST `/api/v1/*`（zhengxin server.py:77-98；zhesi 同构）。无断言兑换端点，jit_policy=off。"
   },
   "auth_tracks": [
+    {
+      "kind": "line-native",
+      "name": "mcp-bearer-token",
+      "accepts": "line-native-key",
+      "fallback": false,
+      "enforced": false,
+      "migration_task": "converge-line-identity-and-keys#8.6",
+      "note": "线自有共享钥匙，**代码已落地并自检**（门判据 9 条 + 接线分支用例），但**未在运行路径生效**：生产部署没有 `MCP_BEARER_TOKEN`，且经 MCP 网关的消费者拿不到自己的 Authorization（网关按设计剥离调用方凭据）——现在翻开关会把本线所有网关消费者打成 401。翻转前提见 8.6 三步（网关侧按 server 注入 → 部署注入同一值 → 才翻变量），先例=law-bench `gateway-reach-for-shared-token-mcp`。入口：`cli.py:26-38`。"
+    },
     {
       "kind": "customer-key",
       "accepts": "ciyuan-sk",
@@ -30,5 +39,5 @@
     "account": false,
     "admin": false
   },
-  "note": "哲学概念（SEP 引用层）/ 人物与六轴坐标 / 关系边（含极性）/ 立场分布（PhilPapers Survey）/ 论文元数据（OpenAlex CC0）。四层外部真源对接组装、逐结果溯源（Atlas 溯源链），不自建抽取。识律（lex）第四/第五模块。"
+  "note": "哲学概念（SEP 引用层）/ 人物与六轴坐标 / 关系边（含极性）/ 立场分布（PhilPapers Survey）/ 论文元数据（OpenAlex CC0）。四层外部真源对接组装、逐结果溯源（Atlas 溯源链），不自建抽取。识律（lex）第四/第五模块。 **8.6 线自有钥匙**：`auth.py` 与 fd-info/fd-text-core/fd-open-data-mcp/fd-cn-report 的门同族；门对 /health(z) 精确豁免，探针不受影响。"
 }
