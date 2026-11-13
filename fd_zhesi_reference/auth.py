@@ -20,10 +20,14 @@ from __future__ import annotations
 import hmac
 import os
 
+from . import wellknown
+
 ENV_TOKEN = "MCP_BEARER_TOKEN"
 
 # 健康面豁免：探针永远不带钥匙，且只回状态，不是数据面。
-EXEMPT_PATHS = ("/health", "/healthz")
+# 线自描述端点同样豁免——它是公开发现面（`/.well-known/line-manifest.json`），
+# 要能被匿名读取。路径字面量只从 `wellknown` 取一处，别在这里重写第二份。
+EXEMPT_PATHS = ("/health", "/healthz", wellknown.WELL_KNOWN_PATH)
 
 
 def configured_token() -> str:

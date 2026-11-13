@@ -14,6 +14,11 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY fd_zhesi_reference ./fd_zhesi_reference
 COPY seed ./seed
+# 线自描述端点 /.well-known/line-manifest.json（change 1.4）：清单在仓根，pip 装的包
+# 里没有它，端点按 CWD 候选链取这一份（WORKDIR=/app）。不在镜像里 = 端点只能答 404，
+# 而 404 与"没实现"在外部无法区分。绝对目标 + 构建期断言：缺了就让构建红。
+COPY line-manifest.json /app/line-manifest.json
+RUN test -s /app/line-manifest.json && ls -l /app/line-manifest.json
 
 RUN if [ -n "$PIP_INDEX_URL" ]; then pip install --no-cache-dir -i "$PIP_INDEX_URL" .; else pip install --no-cache-dir .; fi \
  && useradd -m -u 1000 appuser
