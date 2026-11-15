@@ -12,6 +12,7 @@ license = "MIT"
 authors = [{ name = "FindDataTechnology" }]
 dependencies = [
     "fastmcp>=3.4,<4",
+    "pyjwt[crypto]>=2.8",
     "click",
     "uvicorn",
     "httpx",
