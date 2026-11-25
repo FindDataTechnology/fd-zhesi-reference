@@ -3,16 +3,98 @@
   "server": "fd-zhesi-reference",
   "entry_path": "/fd-zhesi-reference",
   "product_line": "lex",
-  "hosting": ["shared-instance"],
+  "hosting": [
+    "shared-instance"
+  ],
   "description": "哲思（zhesi 线）参照系 MCP：哲学概念（SEP 引用层）、人物与六轴坐标、关系边（含极性）、立场分布（PhilPapers Survey）、PhilPapers 论文元数据（经 OpenAlex 源 S4306402130，CC0）。四层外部真源对接组装（不自建抽取），逐结果溯源（Atlas CC BY 4.0 署名随行，带 snapshot_version），可私有化部署。",
-  "tools": [
-    {"name": "concept_lookup", "tracking_task": "2.4"},
-    {"name": "philosopher_query", "tracking_task": "2.2"},
-    {"name": "relation_query", "tracking_task": "2.2"},
-    {"name": "stance_distribution", "tracking_task": "2.5"},
-    {"name": "philpapers_paper_search", "tracking_task": "zhesi-atlas-resilience 3.1"},
-    {"name": "source_status", "tracking_task": "2.6"}
+  "naming_convention": {
+    "order": "noun_noun_or_noun_verb",
+    "applies_to": "all_tools",
+    "note": "本面工具是名词序（concept_lookup / philosopher_query / relation_query / stance_distribution / source_status），与 fd-legal-search-mcp 同族（同为参照系类服务）。改名会破坏已发布 pack 引用，不改。"
+  },
+  "tool_groups": [
+    {
+      "group": "lookup",
+      "level": "commercial",
+      "tools": [
+        "concept_lookup",
+        "philosopher_query",
+        "relation_query"
+      ],
+      "notes": "概念 / 人物 / 关系三层读面（spec: zhesi-reference 组 2.2/2.4）。"
+    },
+    {
+      "group": "evidence",
+      "level": "commercial",
+      "tools": [
+        "stance_distribution",
+        "philpapers_paper_search"
+      ],
+      "notes": "立场分布（PhilPapers Survey）与论文元数据（经 OpenAlex CC0 源）。"
+    },
+    {
+      "group": "health",
+      "level": "commercial",
+      "tools": [
+        "source_status"
+      ],
+      "notes": "四层源健康与缺口可见性。现为 commercial 以保持 /virtual/zhesi 面 6 工具的既有行为；是否应收为 internal（观测面）属单独的治理决定，不在本 change 内改。"
+    }
   ],
   "skills_eligible_for_packs": [],
-  "notes": "空结果必带 reason（not_indexed / not_ingested / unknown_entity / blocked / upstream / unreachable / quota），不编造数据。静态源摄取走双门（许可门 + 可得性门），未过门时该层不摄取且缺口在 source_status 可见。许可红线（InPhO / DBpedia / Kialo / PhilPapers 直连）由 license.assert_allowed_url 守卫。"
+  "notes": "空结果必带 reason（not_indexed / not_ingested / unknown_entity / blocked / upstream / unreachable / quota），不编造数据。静态源摄取走双门（许可门 + 可得性门），未过门时该层不摄取且缺口在 source_status 可见。许可红线（InPhO / DBpedia / Kialo / PhilPapers 直连）由 license.assert_allowed_url 守卫。",
+  "tool_annotations": {
+    "concept_lookup": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    },
+    "philosopher_query": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "relation_query": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "stance_distribution": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "philpapers_paper_search": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    },
+    "source_status": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "rules": {
+    "commercial_exemptions": [
+      {
+        "tool": "concept_lookup",
+        "reason": "写 30 天 SEP 检索缓存（幂等 upsert，不改变对外返回的数据）；同 fd-open-data-mcp 的 read 系判据。"
+      }
+    ],
+    "commercial_tools": [
+      "concept_lookup",
+      "philosopher_query",
+      "relation_query",
+      "stance_distribution",
+      "philpapers_paper_search",
+      "source_status"
+    ]
+  }
 }
